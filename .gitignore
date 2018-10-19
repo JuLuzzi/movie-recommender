@@ -51,3 +51,6 @@ dmypy.json
 
 # IDEs
 .vscode
+
+#dataset files
+src/dataset/*
