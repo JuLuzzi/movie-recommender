@@ -14,12 +14,12 @@ def start():
     train, test = ts(ratings, train_size=0.8)
 
     # how many nodes
-    nodes_inpl = 4000
-    nodes_hl1 = 256
+    nodes_in = 4000
+    nodes_hidden = 256
     nodes_outl = 4000
 
-    hidden_layer = {'weights': tf.Variable(tf.random_normal([nodes_inpl + 1, nodes_hl1]))}
-    output_layer = {'weights': tf.Variable(tf.random_normal([nodes_hl1 + 1, nodes_outl]))}
+    hidden_layer = {'weights': tf.Variable(tf.random_normal([nodes_in + 1, nodes_hidden]))}
+    output_layer = {'weights': tf.Variable(tf.random_normal([nodes_hidden + 1, nodes_outl]))}
     input_layer = tf.placeholder('float', [None, 4000])
 
     input_layer_const = tf.fill([tf.shape(input_layer)[0], 1], 1.0)
@@ -42,39 +42,39 @@ def start():
     optimizer = tf.train.AdagradOptimizer(learn_rate).minimize(cost_function)
 
     init = tf.global_variables_initializer()
-    sess = tf.Session()
-    sess.run(init)
+    session = tf.Session()
+    session.run(init)
 
     batch_size = 100
-    hm_epochs = 200
+    epochs = 200
     images = train.shape[0]
 
-    training(batch_size, hm_epochs, images, input_layer, cost_function, optimizer, output_layer, output, sess, test,
+    training(batch_size, epochs, images, input_layer, cost_function, optimizer, output_layer, output, session, test,
              train)
 
-    # TODO pasarlo por parametro
     user = test.iloc[99, :]
 
-    user_pred = sess.run(output_layer, feed_dict={input_layer: [user]})
-    # TODO devolver las top 5 predicciones
-    print user_pred
+    pred = session.run(output_layer, feed_dict={input_layer: [user]})
+
+    # TODO guardar las predicciones
+    print pred
 
 
-def training(batch_size, hm_epochs, tot_images, input_layer, meansq, optimizer, output_layer, output_true, sess, test,
-             train):
-    for epoch in range(hm_epochs):
+def training(batch_size, epochs, tot_images, input_layer, cost_function, optimizer, output_layer, output_true, sess,
+             test, train):
+    for epoch in range(epochs):
         error = 0
 
         for i in range(int(tot_images / batch_size)):
             epoch = train[i * batch_size: (i + 1) * batch_size]
-            _, c = sess.run([optimizer, meansq], feed_dict={input_layer: epoch, output_true: epoch})
+            _, c = sess.run([optimizer, cost_function], feed_dict={input_layer: epoch, output_true: epoch})
             error += c
 
         output_train = sess.run(output_layer, feed_dict={input_layer: train})
         output_test = sess.run(output_layer, feed_dict={input_layer: test})
 
         print('Train ', me(output_train, train), ' test', me(output_test, test))
-        print('Epoch ', epoch, '/', hm_epochs, ' loss:', error)
+        print('Epoch ', epoch, '/', epochs, ' loss:', error)
 
 
 if __name__ == "__main__":
